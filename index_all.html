@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<title>AIDA: Automated Intelligence for Decision Analytics</title>
+<style>
+  /* Dark theme, colour blind safe accents (Okabe and Ito) */
+  :root{
+    --bg:#0d1117; --surface:#161b22; --raised:#21262d; --line:#30363d;
+    --text:#f2f5f8; --muted:#f2f5f8; --faint:#f2f5f8; --focus:#F0E442;
+    --c1:#56B4E9; --c2:#E69F00; --c3:#009E73; --c4:#CC79A7;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif;line-height:1.5;min-height:100vh;display:flex;flex-direction:column}
+  .wrap{width:100%;max-width:1440px;margin:0 auto;padding:0 20px}
+
+  /* Country bar, shown when the page was opened from index_africa.html */
+  .country-bar{display:none;background:#010409;border-bottom:1px solid var(--line)}
+  .country-bar.on{display:block}
+  .country-bar .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:8px;padding-bottom:8px}
+  .country-bar a{color:var(--text);text-decoration:none;font-weight:700;font-size:15px;display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border:1px solid var(--line);border-radius:999px;background:var(--raised)}
+  .country-bar a:hover{border-color:var(--c1)}
+  .country-bar a:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+  .country-bar a svg{width:18px;height:18px}
+  .country-now{display:inline-flex;align-items:center;gap:10px;font-weight:700;font-size:17px;min-width:0}
+  .country-now img{width:42px;height:28px;object-fit:cover;border-radius:4px;box-shadow:0 0 0 1px rgba(255,255,255,.35)}
+  .country-now span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  /* Header */
+  .top{background:linear-gradient(135deg,#1f2937,#374151);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
+  .top .wrap{padding-top:18px;padding-bottom:16px}
+  .brand-row{display:flex;align-items:center;gap:18px}
+  .top img{height:100px;width:auto;max-width:40%;object-fit:contain;background:#fff;border-radius:10px;padding:8px 12px;flex:0 0 auto}
+  .brand{min-width:0}
+  .brand h1{margin:0;font-size:42px;line-height:1;font-weight:800;letter-spacing:4px;color:#fff}
+  .brand p{margin:8px 0 0;font-size:18px;font-weight:600;color:#ffffff}
+  .brand .tag{margin:6px 0 0;max-width:100ch;font-size:15px;font-weight:400;font-style:italic;color:#56B4E9}
+  .stats{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:14px;padding:10px 15px;background:rgba(13,17,23,.45);border:1px solid var(--line);border-radius:6px;font-size:13px;color:var(--muted)}
+  .stats b{color:var(--text)}
+
+  main{flex:1;padding:22px 0 36px}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .head{background:var(--raised);border-bottom:1px solid var(--line);padding:15px 20px}
+  .head h2{margin:0;font-size:17px;font-weight:600;color:var(--text)}
+  .head span{display:block;margin-top:2px;color:var(--muted);font-size:13.5px}
+
+  /* Cards: 4 columns desktop, 2 tablet, 1 phone */
+  .grid{list-style:none;margin:0;padding:20px;display:grid;gap:20px;grid-template-columns:repeat(4,minmax(0,1fr))}
+  .grid li{display:flex}
+  .card{--accent:var(--c1);width:100%;text-align:left;font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-top:4px solid var(--accent);border-radius:8px;padding:20px;display:flex;flex-direction:column;gap:12px;cursor:pointer;transition:transform .2s ease,border-color .2s ease}
+  .card.a2{--accent:var(--c2)} .card.a3{--accent:var(--c3)} .card.a4{--accent:var(--c4)}
+  .card:hover{transform:translateY(-3px);border-color:var(--accent)}
+  /* An available use case is filled with its own card colour */
+  .card:not(.soon){background:color-mix(in srgb,var(--accent) 14%,var(--bg));border-color:var(--accent)}
+  .card:not(.soon) h3{color:var(--text)}
+  .card:not(.soon) h3 .uc{color:var(--accent)}
+  .card:not(.soon) p{color:var(--text)}
+  .card:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+  .card .row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .num{width:44px;height:44px;border-radius:50%;border:1px solid var(--accent);color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);font-weight:800;font-size:18px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+  .pill{font-size:12.5px;font-weight:700;padding:3px 12px;border-radius:999px;white-space:nowrap;border:1px solid var(--line);background:var(--surface)}
+  .pill.on{color:var(--accent)}
+    .card h3{margin:0;font-size:19px;line-height:1.3;font-weight:650;color:var(--text)}
+  .card p{margin:0;font-size:14px;color:var(--muted);flex:1}
+  .go{margin-top:6px;align-self:flex-start;display:inline-flex;align-items:center;gap:8px;background:var(--accent);color:#0d1117;font-weight:700;font-size:13.5px;padding:8px 14px;border-radius:5px}
+  .go svg{width:18px;height:18px;transition:transform .2s ease}
+  .card:hover .go svg{transform:translateX(3px)}
+
+  /* Not configured yet: keeps its colour, marked by the dashed border, the label and an outlined button */
+  .card.soon{border-style:dashed;border-top-style:solid;cursor:default}
+  .card.soon:hover{transform:none;border-color:var(--line);border-top-color:var(--accent)}
+  .pill.off{color:var(--accent);border-style:dashed}
+  .card.soon h3{color:var(--text)}
+  .card.soon .go{background:none;color:var(--accent);border:1px dashed var(--accent);font-weight:600}
+
+  /* Notice for use cases not yet configured */
+  .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:var(--raised);color:var(--text);border:1px solid var(--line);border-left:4px solid var(--c2);padding:12px 18px;border-radius:8px;font-weight:600;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.5);opacity:0;pointer-events:none;transition:opacity .2s ease,transform .2s ease;max-width:calc(100% - 32px);text-align:center}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  footer{border-top:1px solid var(--line);color:var(--muted);font-size:13px;padding:14px 0 calc(14px + env(safe-area-inset-bottom));text-align:center}
+
+  /* Tablet: 2 columns */
+  @media (max-width:1023px){
+    .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .top img{height:84px}
+    .brand h1{font-size:36px}
+    .brand p{font-size:16px}
+  }
+  /* Phone: 1 column */
+  @media (max-width:639px){
+    .wrap{padding:0 14px}
+    .grid{grid-template-columns:1fr;gap:14px;padding:14px}
+    .brand-row{gap:12px;flex-wrap:wrap}
+    .brand{flex:1 1 100%}
+    .top img{max-width:70%}
+    .top img{height:62px;padding:6px 8px}
+    .brand h1{font-size:30px;letter-spacing:3px}
+    .brand p{font-size:14.5px;margin-top:6px}
+    .brand .tag{font-size:13px}
+    .stats{gap:4px 14px;font-size:12px}
+    main{padding:16px 0 28px}
+    .card{padding:16px}
+    .card:hover{transform:none}
+  }
+  @media (prefers-reduced-motion:reduce){.card,.go svg,.toast{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="country-bar" id="countryBar">
+  <div class="wrap">
+    <a href="index_africa.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>All countries</a>
+    <div class="country-now"><img id="countryFlag" alt=""><span id="countryName"></span></div>
+  </div>
+</div>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand-row">
+      <img class="logo" src="ICF-SL.jpg" alt="Informatics Consultancy Firm Sierra Leone" onerror="this.remove()">
+      <div class="brand">
+        <h1>AIDA</h1>
+        <p>Automated Intelligence for Decision Analytics</p>
+        <p class="tag">A platform that turns data into clear answers that help the programme decide what to do next.</p>
+      </div>
+    </div>
+    <div class="stats">
+      <div><b id="total">0</b> use cases</div>
+      <div><b id="ready">0</b> available</div>
+      <div><b id="pending">0</b> coming soon</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <section class="panel" aria-labelledby="uc-title">
+      <div class="head">
+        <h2 id="uc-title">Use Cases</h2>
+        <span id="count"></span>
+      </div>
+      <ul class="grid" id="grid"></ul>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap" id="footerText">National Malaria Control Programme, Ministry of Health, Sierra Leone.</div>
+</footer>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ============================================================
+   USE CASES: one entry per card.
+   Put the page file in `url` to switch a card on.
+   Leave `url` empty and the card shows as Coming soon.
+   ============================================================ */
+var USE_CASES = [
+  { title: 'Monthly Reporting Completeness and Follow Up',
+    desc:  'See which facilities and CHWs have reported, find the reporting gaps and follow them up until every report is in.',
+    url:   'use_case1.html' },
+  { title: 'Use Case 2', desc: 'This use case will be configured soon.', url: '' },
+  { title: 'Use Case 3', desc: 'This use case will be configured soon.', url: '' },
+  { title: 'Use Case 4', desc: 'This use case will be configured soon.', url: '' },
+  { title: 'Use Case 5', desc: 'This use case will be configured soon.', url: '' },
+  { title: 'Use Case 6', desc: 'This use case will be configured soon.', url: '' },
+  { title: 'Use Case 7', desc: 'This use case will be configured soon.', url: '' },
+  { title: 'Use Case 8', desc: 'This use case will be configured soon.', url: '' }
+];
+
+(function () {
+  var grid = document.getElementById('grid');
+  var toast = document.getElementById('toast');
+  var ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+  var timer;
+
+  function esc(t) {
+    return String(t).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function notify(msg) {
+    toast.textContent = msg;
+    toast.classList.add('show');
+    clearTimeout(timer);
+    timer = setTimeout(function () { toast.classList.remove('show'); }, 2600);
+  }
+
+  /* ---------- Country chosen on index_africa.html ---------- */
+  var params = new URLSearchParams(location.search);
+  var code = (params.get('country') || '').toLowerCase();
+  var cname = (params.get('name') || '').trim().slice(0, 60);
+  var country = /^[a-z]{2}$/.test(code) && cname ? { code: code, name: cname } : null;
+  var carry = country ? 'country=' + encodeURIComponent(code) + '&name=' + encodeURIComponent(cname) : '';
+  if (country) {
+    document.getElementById('countryBar').classList.add('on');
+    var flag = document.getElementById('countryFlag');
+    flag.onerror = function () { flag.remove(); };
+    flag.src = 'https://flagcdn.com/w80/' + code + '.png';
+    document.getElementById('countryName').textContent = cname;
+    document.getElementById('footerText').textContent = 'AIDA for ' + cname + '.';
+    document.title = 'AIDA: ' + cname;
+  }
+  function withCountry(url) {
+    return carry ? url + (url.indexOf('?') === -1 ? '?' : '&') + carry : url;
+  }
+
+  var ready = 0;
+  USE_CASES.forEach(function (uc, i) {
+    var n = i + 1;
+    var on = !!(uc.url && uc.url.trim());
+    if (on) ready++;
+    /* "Use Case 1: Monthly ...", and plain "Use Case 2" while a card has no title of its own */
+    var label = 'Use Case ' + n;
+    var heading = (uc.title && uc.title !== label) ? label + ': ' + uc.title : label;
+
+    var li = document.createElement('li');
+    var btn = document.createElement('button');
+    btn.type = 'button';
+    /* accents run sky blue, orange, green, purple along each row of four */
+    btn.className = 'card a' + ((i % 4) + 1) + (on ? '' : ' soon');
+    btn.setAttribute('aria-label', heading + (on ? '' : ', coming soon'));
+    btn.innerHTML =
+      '<div class="row"><span class="num" aria-hidden="true">' + n + '</span>' +
+      '<span class="pill ' + (on ? 'on' : 'off') + '">' + (on ? 'Available' : 'Coming soon') + '</span></div>' +
+      '<h3><span class="uc">' + esc(label) + '</span>' + (heading !== label ? ': ' + esc(uc.title) : '') + '</h3>' +
+      '<p>' + esc(uc.desc) + '</p>' +
+      '<span class="go">' + (on ? 'Open use case' + ARROW : 'Not configured yet') + '</span>';
+
+    btn.addEventListener('click', function () {
+      if (!on) { notify('Use Case ' + n + ' is not configured yet.'); return; }
+      var go = withCountry(uc.url);
+      if (!/^https?:$/.test(location.protocol)) { location.href = go; return; }
+      fetch(uc.url, { method: 'HEAD', cache: 'no-store' }).then(function (r) {
+        if (r.ok) location.href = go;
+        else notify(uc.url + ' is not on the server. Upload it beside index_all.html.');
+      }).catch(function () { location.href = go; });
+    });
+
+    li.appendChild(btn);
+    grid.appendChild(li);
+  });
+
+  document.getElementById('count').textContent = ready + ' of ' + USE_CASES.length + ' available';
+  document.getElementById('total').textContent = USE_CASES.length;
+  document.getElementById('ready').textContent = ready;
+  document.getElementById('pending').textContent = USE_CASES.length - ready;
+})();
+</script>
+</body>
+</html>

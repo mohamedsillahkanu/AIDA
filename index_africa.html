@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d1117">
+<title>AIDA: Choose a country</title>
+<style>
+  /* Same dark theme as the AIDA index, colour blind safe accents (Okabe and Ito) */
+  :root{
+    --bg:#0d1117; --surface:#161b22; --raised:#21262d; --line:#30363d;
+    --text:#f2f5f8; --focus:#F0E442;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans",Helvetica,Arial,sans-serif;line-height:1.5;min-height:100vh;display:flex;flex-direction:column}
+  .wrap{width:100%;max-width:1440px;margin:0 auto;padding:0 20px}
+
+  /* Header, as on the AIDA index */
+  .top{background:linear-gradient(135deg,#1f2937,#374151);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top)}
+  .top .wrap{padding-top:18px;padding-bottom:16px}
+  .brand-row{display:flex;align-items:center;gap:18px}
+  .top img{height:100px;width:auto;max-width:40%;object-fit:contain;background:#fff;border-radius:10px;padding:8px 12px;flex:0 0 auto}
+  .brand{min-width:0}
+  .brand h1{margin:0;font-size:42px;line-height:1;font-weight:800;letter-spacing:4px;color:#fff}
+  .brand p{margin:8px 0 0;font-size:18px;font-weight:600;color:#fff}
+  .brand .tag{margin:6px 0 0;font-size:15px;font-weight:400;font-style:italic;color:#56B4E9}
+  .stats{display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:14px;padding:10px 15px;background:rgba(13,17,23,.45);border:1px solid var(--line);border-radius:6px;font-size:13px;color:var(--text)}
+
+  main{flex:1;padding:22px 0 36px}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+  .head{background:var(--raised);border-bottom:1px solid var(--line);padding:15px 20px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+  .head h2{margin:0;font-size:17px;font-weight:600}
+  .head span{display:block;margin-top:2px;font-size:13.5px}
+  .search{flex:0 1 320px;min-width:200px;background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:9px 12px;font:inherit;font-size:15px}
+  .search::placeholder{color:#e8eef3;opacity:1}
+  .search:focus{outline:3px solid var(--focus);outline-offset:1px}
+
+  /* One section per region */
+  .region{padding:20px 20px 4px}
+  .region + .region{border-top:1px solid var(--line)}
+  .region h3{--c:#56B4E9;margin:0 0 14px;font-size:18px;display:flex;align-items:center;gap:10px;color:var(--c)}
+  .region h3 .count{font-size:12.5px;font-weight:700;color:var(--text);border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:2px 10px}
+
+  /* Country cards: 4 columns desktop, 3 small laptop, 2 tablet, 1 phone */
+  .grid{list-style:none;margin:0 0 16px;padding:0;display:grid;gap:16px;grid-template-columns:repeat(4,minmax(0,1fr))}
+  .card{--c:#56B4E9;display:flex;align-items:center;gap:14px;height:100%;padding:14px 16px;background:var(--bg);color:var(--text);text-decoration:none;border:1px solid var(--line);border-left:5px solid var(--c);border-radius:8px;transition:transform .2s ease,border-color .2s ease}
+  .card:hover{transform:translateY(-2px);border-color:var(--c)}
+  .card:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+  .flag{flex:0 0 auto;width:72px;height:48px;border-radius:5px;overflow:hidden;background:var(--raised);box-shadow:0 0 0 1px rgba(255,255,255,.35)}
+  .flag img{width:100%;height:100%;object-fit:cover;display:block}
+  .name{min-width:0;flex:1}
+  .name b{display:block;font-size:17px;line-height:1.3}
+  .name span{display:block;font-size:13px;color:var(--c);font-weight:600}
+  .arrow{flex:0 0 auto;width:20px;height:20px;color:var(--c);transition:transform .2s ease}
+  .card:hover .arrow{transform:translateX(3px)}
+  .notice{display:none;margin:16px 20px 0;padding:12px 16px;border:1px solid var(--line);border-left:5px solid #E69F00;border-radius:8px;background:var(--bg);font-weight:600}
+  .notice.show{display:block}
+  .notice code{color:#F0E442}
+  .empty{display:none;padding:30px 20px;text-align:center;font-weight:600}
+
+  footer{border-top:1px solid var(--line);color:var(--text);font-size:13px;padding:14px 0 calc(14px + env(safe-area-inset-bottom));text-align:center}
+
+  @media (max-width:1180px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+  @media (max-width:1023px){
+    .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    .top img{height:84px}
+    .brand h1{font-size:36px}
+    .brand p{font-size:16px}
+  }
+  @media (max-width:639px){
+    .wrap{padding:0 14px}
+    .grid{grid-template-columns:1fr;gap:12px}
+    .region{padding:16px 14px 2px}
+    .brand-row{gap:12px;flex-wrap:wrap}
+    .brand{flex:1 1 100%}
+    .top img{height:62px;max-width:70%;padding:6px 8px}
+    .brand h1{font-size:30px;letter-spacing:3px}
+    .brand p{font-size:14.5px;margin-top:6px}
+    .brand .tag{font-size:13px}
+    .stats{gap:4px 14px;font-size:12px}
+    main{padding:16px 0 28px}
+    .search{flex:1 1 100%}
+    .card:hover{transform:none}
+  }
+  @media (prefers-reduced-motion:reduce){.card,.arrow{transition:none}}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand-row">
+      <img src="ICF-SL.jpg" alt="Informatics Consultancy Firm Sierra Leone" onerror="this.remove()">
+      <div class="brand">
+        <h1>AIDA</h1>
+        <p>Automated Intelligence for Decision Analytics</p>
+        <p class="tag">A platform that turns data into clear answers that help the programme decide what to do next.</p>
+      </div>
+    </div>
+    <div class="stats">
+      <div><b id="nCountries">0</b> countries</div>
+      <div><b id="nRegions">0</b> regions</div>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <section class="panel" aria-labelledby="pick-title">
+      <div class="head">
+        <div>
+          <h2 id="pick-title">Choose a country</h2>
+          <span id="showing"></span>
+        </div>
+        <input class="search" id="search" type="search" placeholder="Search for a country" aria-label="Search for a country" autocomplete="off">
+      </div>
+      <div class="notice" id="notice" role="alert"></div>
+      <div id="regions"></div>
+      <p class="empty" id="empty">No country matches that search.</p>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">AIDA for African health programmes.</div>
+</footer>
+
+<script>
+/* ============================================================
+   COUNTRIES by region (UN groupings). Every country opens the
+   same AIDA page: index_all.html?country=<code>&name=<name>
+   Flags come from flagcdn.com, so they need internet.
+   ============================================================ */
+var AIDA_PAGE = 'index_all.html';
+var REGIONS = [{"id": "west", "name": "West Africa", "color": "#56B4E9", "countries": [{"code": "bj", "name": "Benin"}, {"code": "bf", "name": "Burkina Faso"}, {"code": "cv", "name": "Cabo Verde"}, {"code": "ci", "name": "Côte d'Ivoire"}, {"code": "gm", "name": "Gambia"}, {"code": "gh", "name": "Ghana"}, {"code": "gn", "name": "Guinea"}, {"code": "gw", "name": "Guinea-Bissau"}, {"code": "lr", "name": "Liberia"}, {"code": "ml", "name": "Mali"}, {"code": "mr", "name": "Mauritania"}, {"code": "ne", "name": "Niger"}, {"code": "ng", "name": "Nigeria"}, {"code": "sn", "name": "Senegal"}, {"code": "sl", "name": "Sierra Leone"}, {"code": "tg", "name": "Togo"}]}, {"id": "central", "name": "Central Africa", "color": "#009E73", "countries": [{"code": "ao", "name": "Angola"}, {"code": "cm", "name": "Cameroon"}, {"code": "cf", "name": "Central African Republic"}, {"code": "td", "name": "Chad"}, {"code": "cg", "name": "Congo"}, {"code": "cd", "name": "DR Congo"}, {"code": "gq", "name": "Equatorial Guinea"}, {"code": "ga", "name": "Gabon"}, {"code": "st", "name": "São Tomé and Príncipe"}]}, {"id": "east", "name": "East Africa", "color": "#E69F00", "countries": [{"code": "bi", "name": "Burundi"}, {"code": "km", "name": "Comoros"}, {"code": "dj", "name": "Djibouti"}, {"code": "er", "name": "Eritrea"}, {"code": "et", "name": "Ethiopia"}, {"code": "ke", "name": "Kenya"}, {"code": "mg", "name": "Madagascar"}, {"code": "mw", "name": "Malawi"}, {"code": "mu", "name": "Mauritius"}, {"code": "mz", "name": "Mozambique"}, {"code": "rw", "name": "Rwanda"}, {"code": "sc", "name": "Seychelles"}, {"code": "so", "name": "Somalia"}, {"code": "ss", "name": "South Sudan"}, {"code": "tz", "name": "Tanzania"}, {"code": "ug", "name": "Uganda"}, {"code": "zm", "name": "Zambia"}, {"code": "zw", "name": "Zimbabwe"}]}, {"id": "southern", "name": "Southern Africa", "color": "#CC79A7", "countries": [{"code": "bw", "name": "Botswana"}, {"code": "sz", "name": "Eswatini"}, {"code": "ls", "name": "Lesotho"}, {"code": "na", "name": "Namibia"}, {"code": "za", "name": "South Africa"}]}, {"id": "north", "name": "North Africa", "color": "#F0E442", "countries": [{"code": "dz", "name": "Algeria"}, {"code": "eg", "name": "Egypt"}, {"code": "ly", "name": "Libya"}, {"code": "ma", "name": "Morocco"}, {"code": "sd", "name": "Sudan"}, {"code": "tn", "name": "Tunisia"}]}];
+
+(function () {
+  var host = document.getElementById('regions');
+  var ARROW = '<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+  var total = 0;
+
+  function esc(t) {
+    return String(t).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  /* so "cote" finds Côte d'Ivoire and "sao" finds São Tomé */
+  function plain(t) {
+    return String(t).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  }
+
+  REGIONS.forEach(function (r) {
+    var sec = document.createElement('section');
+    sec.className = 'region';
+    sec.innerHTML = '<h3 style="--c:' + r.color + '">' + esc(r.name) + ' <span class="count"></span></h3><ul class="grid"></ul>';
+    var ul = sec.querySelector('ul');
+    r.countries.forEach(function (c) {
+      total++;
+      var href = AIDA_PAGE + '?country=' + encodeURIComponent(c.code) + '&name=' + encodeURIComponent(c.name);
+      var li = document.createElement('li');
+      li.dataset.key = plain(c.name);
+      li.innerHTML =
+        '<a class="card" style="--c:' + r.color + '" href="' + href + '">' +
+          '<span class="flag"><img src="https://flagcdn.com/w160/' + c.code + '.png" srcset="https://flagcdn.com/w320/' + c.code + '.png 2x" alt="" loading="lazy" onerror="this.remove()"></span>' +
+          '<span class="name"><b>' + esc(c.name) + '</b><span>' + esc(r.name) + '</span></span>' + ARROW +
+        '</a>';
+      ul.appendChild(li);
+    });
+    host.appendChild(sec);
+  });
+
+  document.getElementById('nCountries').textContent = total;
+  document.getElementById('nRegions').textContent = REGIONS.length;
+
+  /* On a website, make sure the AIDA page is really there before leaving,
+     so a missing or misnamed file says so instead of opening a blank error page.
+     Opened from disk (file://) the browser cannot check, so it just opens. */
+  var notice = document.getElementById('notice');
+  host.addEventListener('click', function (e) {
+    var a = e.target.closest('a.card');
+    if (!a || !/^https?:$/.test(location.protocol)) return;
+    e.preventDefault();
+    var go = a.href;
+    fetch(AIDA_PAGE, { method: 'HEAD', cache: 'no-store' }).then(function (r) {
+      if (r.ok) { location.href = go; return; }
+      notice.innerHTML = '<code>' + esc(AIDA_PAGE) + '</code> is not on the server, so the country page cannot open. Upload it beside <code>index_africa.html</code>, spelled exactly like that.';
+      notice.classList.add('show');
+      notice.scrollIntoView({ block: 'center' });
+    }).catch(function () { location.href = go; });
+  });
+
+  var input = document.getElementById('search');
+  function filter() {
+    var q = plain(input.value.trim());
+    var shown = 0;
+    host.querySelectorAll('.region').forEach(function (sec) {
+      var n = 0;
+      sec.querySelectorAll('li').forEach(function (li) {
+        var hit = !q || li.dataset.key.indexOf(q) !== -1;
+        li.hidden = !hit;
+        if (hit) n++;
+      });
+      sec.hidden = n === 0;
+      sec.querySelector('.count').textContent = n + (n === 1 ? ' country' : ' countries');
+      shown += n;
+    });
+    document.getElementById('showing').textContent = q ? shown + ' of ' + total + ' countries' : 'All ' + total + ' African countries';
+    document.getElementById('empty').style.display = shown ? 'none' : 'block';
+  }
+  input.addEventListener('input', filter);
+  filter();
+})();
+</script>
+</body>
+</html>
